@@ -18,36 +18,22 @@ A full-stack web application starter with a FastAPI backend, SQLite database (SQ
 
 ```text
 recruitment_pipeline/
-├── SCHEMA.md              # Plain-language data schema + Excel gap list
+├── MB_Master_Dashboard_AB_V2.xlsx   # Source workbook; seeded on first startup
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py        # FastAPI health check and starter routes
+│   │   ├── main.py        # API routes
+│   │   ├── models.py      # pipeline_weeks, training_weeks, people
+│   │   ├── seed.py        # Loads the workbook into SQLite
+│   │   ├── analytics.py   # Executive, funnel, deployment, cohort metrics
 │   │   └── database.py    # SQLite engine and session configuration
-│   ├── schema/
-│   │   ├── schema.sql     # Tables, indexes, seed data
-│   │   └── views.sql      # Leadership KPI views (pipeline, cohorts, economics)
-│   ├── requirements.txt   # Python dependencies
-│   └── venv/              # Python virtual environment
+│   ├── requirements.txt
+│   └── venv/
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx        # Starter React dashboard
-│   │   ├── index.css      # Tailwind CSS configuration
-│   │   └── main.jsx       # React application entry
-│   ├── package.json       # Frontend dependencies and scripts
-│   └── vite.config.js     # Vite configuration with API proxy
+│   └── src/               # Executive, recruitment, deployment, cohort screens
 └── .gitignore
 ```
 
-## Database schema
-
-See [SCHEMA.md](SCHEMA.md) for the full model (recruitment, cohorts, deployment, economics, leadership actions).
-
-```bash
-cd backend
-sqlite3 recruitment.db < schema/schema.sql
-sqlite3 recruitment.db < schema/views.sql
-```
+The API creates those three tables on startup and fills them from the workbook when the database is empty.
 
 ---
 
