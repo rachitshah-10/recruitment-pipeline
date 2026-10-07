@@ -1,68 +1,72 @@
-import React from 'react'
-import { CheckCircle2, Server, Database, Layout } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Briefcase, GraduationCap, LayoutDashboard, Users } from 'lucide-react'
+import Executive from './pages/Executive.jsx'
+import Recruitment from './pages/Recruitment.jsx'
+import Deployment from './pages/Deployment.jsx'
+import Cohort from './pages/Cohort.jsx'
+
+const PAGES = [
+  { id: 'executive', label: 'Executive', icon: LayoutDashboard, Page: Executive },
+  { id: 'recruitment', label: 'Recruitment', icon: Users, Page: Recruitment },
+  { id: 'deployment', label: 'Deployment', icon: Briefcase, Page: Deployment },
+  { id: 'cohort', label: 'Cohort health', icon: GraduationCap, Page: Cohort },
+]
+
+function readHash() {
+  const id = window.location.hash.replace('#', '')
+  return PAGES.some((page) => page.id === id) ? id : 'executive'
+}
 
 export default function App() {
-  const stackItems = [
-    {
-      title: 'Backend API',
-      tech: 'FastAPI + Uvicorn',
-      status: 'Ready',
-      icon: Server,
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-    },
-    {
-      title: 'Frontend UI',
-      tech: 'React 19 + Vite + Tailwind CSS',
-      status: 'Ready',
-      icon: Layout,
-      color: 'text-blue-600 bg-blue-50 border-blue-200',
-    },
-    {
-      title: 'Database',
-      tech: 'SQLite + SQLAlchemy ORM',
-      status: 'Ready',
-      icon: Database,
-      color: 'text-purple-600 bg-purple-50 border-purple-200',
-    },
-  ]
+  const [pageId, setPageId] = useState(readHash)
+
+  useEffect(() => {
+    const onHash = () => setPageId(readHash())
+    window.addEventListener('hashchange', onHash)
+    if (!window.location.hash) window.location.replace('#executive')
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const current = PAGES.find((page) => page.id === pageId) || PAGES[0]
+  const Page = current.Page
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-            <CheckCircle2 className="w-8 h-8" />
+    <div className="min-h-screen bg-paper text-ink">
+      <div className="h-1 bg-moss" />
+      <div className="lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
+        <aside className="bg-ink text-white lg:sticky lg:top-0 lg:h-screen lg:flex lg:flex-col">
+          <div className="px-4 pt-5 pb-4">
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Coforge</p>
+            <p className="font-semibold text-lg leading-tight mt-1">Momentuum Blue</p>
+            <p className="text-xs text-white/50 mt-0.5">Operations</p>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Recruitment Pipeline</h1>
-            <p className="text-sm text-slate-500">Full-Stack Development Environment Ready</p>
+          <nav className="flex lg:flex-col gap-1 px-2 pb-4 overflow-x-auto">
+            {PAGES.map((page) => {
+              const Icon = page.icon
+              const active = page.id === current.id
+              return (
+                <a
+                  key={page.id}
+                  href={`#${page.id}`}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm whitespace-nowrap ${
+                    active ? 'bg-white/10 text-white' : 'text-white/65 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {page.label}
+                </a>
+              )
+            })}
+          </nav>
+          <div className="hidden lg:flex mt-auto px-4 py-4 text-xs text-white/45 items-center gap-2">
+            <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Live · refreshes every 10s
           </div>
-        </div>
-
-        <div className="grid gap-4 mt-6">
-          {stackItems.map((item, idx) => {
-            const Icon = item.icon
-            return (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2.5 rounded-lg border ${item.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 text-sm">{item.title}</h3>
-                    <p className="text-xs text-slate-500">{item.tech}</p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                  {item.status}
-                </span>
-              </div>
-            )
-          })}
-        </div>
+        </aside>
+        <main className="min-w-0">
+          <Page />
+        </main>
       </div>
     </div>
   )
