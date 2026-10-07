@@ -18,11 +18,15 @@ A full-stack web application starter with a FastAPI backend, SQLite database (SQ
 
 ```text
 recruitment_pipeline/
+├── SCHEMA.md              # Plain-language data schema + Excel gap list
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py        # FastAPI health check and starter routes
 │   │   └── database.py    # SQLite engine and session configuration
+│   ├── schema/
+│   │   ├── schema.sql     # Tables, indexes, seed data
+│   │   └── views.sql      # Leadership KPI views (pipeline, cohorts, economics)
 │   ├── requirements.txt   # Python dependencies
 │   └── venv/              # Python virtual environment
 ├── frontend/
@@ -33,6 +37,16 @@ recruitment_pipeline/
 │   ├── package.json       # Frontend dependencies and scripts
 │   └── vite.config.js     # Vite configuration with API proxy
 └── .gitignore
+```
+
+## Database schema
+
+See [SCHEMA.md](SCHEMA.md) for the full model (recruitment, cohorts, deployment, economics, leadership actions).
+
+```bash
+cd backend
+sqlite3 recruitment.db < schema/schema.sql
+sqlite3 recruitment.db < schema/views.sql
 ```
 
 ---
