@@ -30,7 +30,7 @@ export default function Economics() {
           <PageHeader
             kicker="Economics"
             title="Where are we spending our time and money?"
-            lede="Four results, one ranking, and the path from applicant to deployment. Hours and dollars use the sample rates at the bottom."
+            lede="Three results, one ranking, and the path from applicant to deployment. Hours and dollars use the sample rates at the bottom."
             asOf={dateLabel(data.as_of)}
             updatedAt={updatedAt}
           />
@@ -70,19 +70,11 @@ export default function Economics() {
 
 function Headline({ data }) {
   const k = data.burn.kpis
-  const revenue = data.revenue
-  const sampleRisk = revenue.sources.some((source) => source.origin === 'demo')
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <Kpi sample label="Total resource hours" value={hours(k.total_hours)} detail="Workbook volumes × sample hours per activity" />
       <Kpi sample label="Total resource cost" value={moneyCompact(k.total_cost)} detail="Those hours × sample hourly and unit costs" />
       <Kpi sample label="Cost per hire" value={money(k.cost_per_hire)} detail={`Sample recruitment cost ÷ ${dash(k.accepted)} accepted offers`} />
-      <Kpi
-        sample={sampleRisk}
-        label="Revenue at risk"
-        value={moneyCompact(revenue.total_at_risk)}
-        detail={`${moneyCompact(revenue.existing_at_risk)} / month is existing run-rate from the workbook.`}
-      />
     </div>
   )
 }

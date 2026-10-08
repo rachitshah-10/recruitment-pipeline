@@ -33,13 +33,14 @@ from app.models import DemandForecast, Person, PipelineWeek, ResourceRate, Train
 PHASES = ("recruitment", "training", "deployment")
 
 # stage code, label, pending field, cleared field
+# Business order. Later stages imply the earlier ones when a count is blank.
+# The sheet also has an L3 column; that step is not part of this process.
 CHAIN = (
-    ("screening", "Screening", "screening_pending", "screening_cleared"),
+    ("screening", "Resume screening", "screening_pending", "screening_cleared"),
+    ("berribot", "Berribot interview", "berribot_applied", "berribot_cleared"),
     ("l1", "L1 interview", "l1_pending", "l1_cleared"),
-    ("berribot", "Assessment (Berribot)", "berribot_applied", "berribot_cleared"),
     ("l2", "L2 interview", "l2_pending", "l2_cleared"),
-    ("l3", "L3 interview", "l3_pending", "l3_cleared"),
-    ("cto", "CTO interview", "cto_pending", "cto_cleared"),
+    ("cto", "CTO round", "cto_pending", "cto_cleared"),
     ("offers", "Offer", "offer_extended", "offer_accepted"),
 )
 STAGE_FIELDS = (
@@ -50,12 +51,12 @@ STAGE_FIELDS = (
 )
 DRIVER_LABELS = {
     "applications": "applications",
-    "screening": "candidates screened",
-    "l1": "L1 candidates",
-    "berribot": "assessments",
-    "l2": "L2 candidates",
-    "l3": "L3 candidates",
-    "cto": "CTO candidates",
+    "screening": "resumes screened",
+    "berribot": "Berribot interviews",
+    "l1": "L1 interviews",
+    "l2": "L2 interviews",
+    "hr": "HR rounds",
+    "cto": "CTO rounds",
     "offers": "offers",
     "accepted": "accepted offers",
     "academy_weeks": "academy weeks",
@@ -66,11 +67,12 @@ STAGE_GROUPS = {
     "applicant": "Sourcing & screening",
     "interview": "Interviews & assessment",
     "offer": "Offers",
+    "verification": "Background verification",
     "accepted": "Acceptance checks",
     "training": "Training",
     "deployment": "Deployment onboarding",
 }
-PIPELINE_DRIVERS = ("applications", "screening", "l1", "berribot", "l2", "l3", "cto", "offers", "accepted")
+PIPELINE_DRIVERS = ("applications", "screening", "berribot", "l1", "l2", "cto", "offers", "accepted")
 
 
 @dataclass
@@ -858,7 +860,7 @@ def _hiring(ctx: dict) -> dict:
     deployment = cost("deployment")
     total = recruitment + training + deployment
     applicants = vols["applications"]["value"]
-    interview_values = [vols[d]["value"] for d in ("l1", "berribot", "l2") if vols[d]["value"] is not None]
+    interview_values = [vols[d]["value"] for d in ("berribot", "l1", "l2", "cto") if vols[d]["value"] is not None]
     interviewed = max(interview_values) if interview_values else None
     offers = vols["offers"]["value"]
     accepted = vols["accepted"]["value"]
@@ -875,7 +877,7 @@ def _hiring(ctx: dict) -> dict:
         {"key": "applicant", "label": "Applicant", "people": applicants, "origin": origin("applications"),
          "conversion": None, "conversion_note": "Start of funnel",
          "outcome": interviewed, "outcome_label": "reached interviews"},
-        {"key": "interview", "label": "Interview", "people": interviewed, "origin": origin("l1", "berribot", "l2"),
+        {"key": "interview", "label": "Interview", "people": interviewed, "origin": origin("berribot", "l1", "l2", "cto"),
          "conversion": _div(interviewed, applicants), "conversion_note": "of applicants",
          "outcome": offers, "outcome_label": "received offers"},
         {"key": "offer", "label": "Offer", "people": offers, "origin": origin("offers"),

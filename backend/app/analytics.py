@@ -3,7 +3,7 @@
 Rules follow the Momentuum Blue workbook:
 
 - A blank hiring count is unreported, not zero. Totals add the numbers that exist.
-- In pipeline = screening, L1, Berribot, L2, L3, CTO, and offer-extended pending.
+- In pipeline = resume screening, Berribot, L1, L2, CTO, and offer-extended pending.
 - On hold, rejects, and cumulative clears are not part of the live pipeline.
 - Monthly revenue = hourly rate x hours/week x 4, for contracts active on the as-of date.
 - Utilization = FDEs active at a client / joined FDEs who are not trainees.
@@ -30,25 +30,22 @@ ROLE_KEYS = (
 
 PIPELINE_FIELDS = (
     "screening_pending",
-    "l1_pending",
     "berribot_applied",
+    "l1_pending",
     "l2_pending",
-    "l3_pending",
     "cto_pending",
     "offer_extended",
 )
 
 FLOW = (
-    ("screening_pending", "Screening pending", False),
-    ("screening_cleared", "Screening cleared", True),
-    ("l1_pending", "L1 pending", False),
-    ("l1_cleared", "L1 cleared", True),
-    ("berribot_applied", "Berribot applied", False),
-    ("berribot_cleared", "Berribot cleared", True),
-    ("l2_pending", "L2 pending", False),
-    ("l2_cleared", "L2 cleared", True),
-    ("l3_pending", "L3 pending", False),
-    ("l3_cleared", "L3 cleared", True),
+    ("screening_pending", "Resume screening pending", False),
+    ("screening_cleared", "Resume screening cleared", True),
+    ("berribot_applied", "Berribot interview pending", False),
+    ("berribot_cleared", "Berribot interview cleared", True),
+    ("l1_pending", "L1 interview pending", False),
+    ("l1_cleared", "L1 interview cleared", True),
+    ("l2_pending", "L2 interview pending", False),
+    ("l2_cleared", "L2 interview cleared", True),
     ("cto_pending", "CTO round pending", False),
     ("cto_cleared", "CTO round cleared", True),
     ("offer_extended", "Offer extended", False),
@@ -569,10 +566,9 @@ def build_executive(db: Session, as_of: date, week: Optional[date]) -> dict:
     if rows:
         funnel.append(_stage("In pipeline now", _pipeline_across(rows), False, True))
         for field, label in (
-            ("l1_cleared", "L1 cleared"),
-            ("berribot_cleared", "Berribot cleared"),
-            ("l2_cleared", "L2 cleared"),
-            ("l3_cleared", "L3 cleared"),
+            ("berribot_cleared", "Berribot interview cleared"),
+            ("l1_cleared", "L1 interview cleared"),
+            ("l2_cleared", "L2 interview cleared"),
         ):
             funnel.append(_stage(label, _across(rows, field), True))
         funnel.append(_stage("In CTO round", _across(rows, "cto_pending"), False))

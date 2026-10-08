@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const KEY = 'mb-insight-filters'
-const EMPTY = { start: '', end: '', phase: '', role: '', location: '', cohort: '', basis: 'inferred' }
+const EMPTY = { start: '', end: '', phase: '', role: '', cohort: '', basis: 'inferred' }
 
 function read() {
   try {
@@ -23,6 +23,7 @@ export function useFilters() {
 export function toQuery(filters, skip = []) {
   const params = new URLSearchParams()
   Object.entries(filters).forEach(([key, value]) => {
+    if (key === 'location') return
     if (value && !skip.includes(key)) params.set(key, value)
   })
   const text = params.toString()
@@ -83,7 +84,6 @@ export function FilterBar({ filters, onChange, onReset, options, showPhase = tru
         />
       ) : null}
       <Select label="Role" value={filters.role} onChange={(role) => onChange({ role })} options={options?.roles || []} />
-      <Select label="Location" value={filters.location} onChange={(location) => onChange({ location })} options={options?.locations || []} />
       <Select label="Cohort" value={filters.cohort} onChange={(cohort) => onChange({ cohort })} options={options?.cohorts || []} />
       <Select
         label="Count basis"
