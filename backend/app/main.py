@@ -6,15 +6,16 @@ from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from app.matching import MatchRequest, match_bench
 from app import models  # noqa: F401
 from app.analytics import build_cohort, build_deployment, build_executive, build_recruitment
 from app.chatbot import reply as chat_reply
 from app.cost_seed import ensure_cost_rates
 from app.database import Base, engine, get_db
 from app.economics import PHASES, Filters, build_economics, save_rates
-from app.feedback import ensure_feedback
 from app.recommendations import build_actions, set_status
 from app.seed import seed_if_empty
+from app.ai_requirements import RequirementInput, extract_requirements
 
 
 @asynccontextmanager
@@ -22,7 +23,6 @@ async def lifespan(_app):
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
     ensure_cost_rates()
-    ensure_feedback()
     yield
 
 
@@ -101,6 +101,23 @@ def recruitment(week: Optional[str] = None, as_of: Optional[str] = None, db: Ses
 def deployment(as_of: Optional[str] = None, db: Session = Depends(get_db)):
     return build_deployment(db, _day(as_of))
 
+@app.post("/api/deployment/match")
+def deployment_match(
+    payload: MatchRequest,
+    as_of: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    try:
+        return match_bench(
+            db=db,
+            as_of=_day(as_of),
+            request=payload
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc)
+        )
 
 @app.get("/api/cohort")
 def cohort(as_of: Optional[str] = None, db: Session = Depends(get_db)):
@@ -137,3 +154,15 @@ def action_status(rec_id: str, payload: dict = Body(...), db: Session = Depends(
         return set_status(db, rec_id, payload.get("status"))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+@app.post("/api/deployment/extract-requirements")
+def deployment_extract_requirements(payload: RequirementInput):
+    try:
+        result = extract_requirements(payload.description)
+        return result
+
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc)
+        )
