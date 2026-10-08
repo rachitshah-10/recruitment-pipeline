@@ -107,6 +107,23 @@ class DemandForecast(Base):
     is_demo = Column(Integer, nullable=False, default=1)
 
 
+class InterviewFeedback(Base):
+    """One interviewer's verdict on a candidate. Not in the workbook; seeded rows are demo."""
+
+    __tablename__ = "interview_feedback"
+
+    id = Column(Integer, primary_key=True)
+    cohort = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    candidate = Column(String, nullable=False)
+    round = Column(String, nullable=False)  # L1 | L2 | CTO
+    interviewer = Column(String, nullable=False)
+    rating = Column(String, nullable=False)  # Strong hire | Hire | No hire | Strong no hire
+    comment = Column(Text)
+    interview_date = Column(Date, nullable=False, index=True)
+    is_demo = Column(Integer, nullable=False, default=1)
+
+
 class RecommendationStatus(Base):
     """Leadership decision on a generated recommendation, keyed by its stable id."""
 

@@ -17,6 +17,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.feedback import build_feedback
 from app.models import Person, PipelineWeek, TrainingWeek
 
 BILLING_WEEKS = 4
@@ -480,13 +481,16 @@ def build_recruitment(db: Session, week: Optional[date], as_of: date) -> dict:
     selected = week or (weeks[-1] if weeks else None)
     rows = _pipeline_for_week(db, selected) if selected else []
     names = sorted({row.cohort for row in rows})
+    cohorts = [_cohort_block(name, [row for row in rows if row.cohort == name]) for name in names]
+    for cohort in cohorts:
+        cohort["feedback"] = build_feedback(db, cohort["name"], selected)
     return {
         "as_of": _iso(as_of),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "weeks": [_iso(value) for value in weeks],
         "week_ending": _iso(selected),
         "pressure": _pressure(rows) if rows else None,
-        "cohorts": [_cohort_block(name, [row for row in rows if row.cohort == name]) for name in names],
+        "cohorts": cohorts,
     }
 
 

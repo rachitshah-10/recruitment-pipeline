@@ -12,6 +12,7 @@ from app.chatbot import reply as chat_reply
 from app.cost_seed import ensure_cost_rates
 from app.database import Base, engine, get_db
 from app.economics import PHASES, Filters, build_economics, save_rates
+from app.feedback import ensure_feedback
 from app.recommendations import build_actions, set_status
 from app.seed import seed_if_empty
 
@@ -21,6 +22,7 @@ async def lifespan(_app):
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
     ensure_cost_rates()
+    ensure_feedback()
     yield
 
 

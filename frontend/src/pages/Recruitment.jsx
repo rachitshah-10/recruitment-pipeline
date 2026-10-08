@@ -1,7 +1,16 @@
 import { useState } from 'react'
-import { dateLabel, dash } from '../format'
+import { dateLabel, dash, pct } from '../format'
 import { useDashboard } from '../api'
-import { Callout, Cell, Kpi, PageHeader, Panel, State } from '../ui'
+import { Callout, Cell, Kpi, PageHeader, Panel, SampleMark, State } from '../ui'
+
+const RATINGS = [
+  ['strong_hire', 'Strong hire', 'bg-moss', 'bg-[#f2f8f6] text-moss border-moss/25'],
+  ['hire', 'Hire', 'bg-moss/45', 'bg-[#f2f8f6] text-moss border-moss/25'],
+  ['no_hire', 'No hire', 'bg-clay/45', 'bg-[#fdf4f3] text-clay border-clay/30'],
+  ['strong_no_hire', 'Strong no hire', 'bg-clay', 'bg-[#fdf4f3] text-clay border-clay/30'],
+]
+
+const RATING_STYLE = Object.fromEntries(RATINGS.map(([, label, , pill]) => [label, pill]))
 
 export default function Recruitment() {
   const [weekOverride, setWeekOverride] = useState(null)
@@ -121,6 +130,8 @@ function CohortBlock({ cohort }) {
         </div>
       </div>
 
+      {cohort.feedback?.overall.total ? <Feedback feedback={cohort.feedback} /> : null}
+
       <div className="overflow-x-auto mt-6">
         <table className="w-full text-sm">
           <thead>
@@ -148,6 +159,87 @@ function CohortBlock({ cohort }) {
         </table>
       </div>
     </Panel>
+  )
+}
+
+function Feedback({ feedback }) {
+  const { overall } = feedback
+  return (
+    <div className={`mt-6 rounded-lg border px-4 py-4 ${feedback.sample ? 'border-dashed border-brass/60' : 'border-line'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h3 className="text-xs uppercase tracking-wider text-ink/50 font-medium flex items-center gap-2">
+          Interview feedback
+          {feedback.sample ? <SampleMark /> : null}
+        </h3>
+        <p className="text-xs text-ink/60">
+          {overall.total} verdicts on {feedback.candidates} candidates · <span className="font-semibold text-ink">{pct(overall.hire_rate)}</span> hire or strong hire
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {RATINGS.map(([key, label, color]) => (
+          <div key={key} className="rounded-md border border-line bg-card px-3 py-2">
+            <p className="text-[11px] uppercase tracking-wider text-ink/55 flex items-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${color}`} />
+              {label}
+            </p>
+            <p className="font-mono text-xl mt-1">{overall[key]}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-5 gap-6 mt-5">
+        <div className="lg:col-span-2">
+          <h4 className="text-xs uppercase tracking-wider text-ink/50 font-medium mb-3">By round</h4>
+          <div className="flex flex-col gap-2.5">
+            {feedback.by_round.map((round) => (
+              <div key={round.round} className="grid grid-cols-[2.5rem_1fr_3rem] gap-3 items-center">
+                <span className="text-sm font-medium">{round.round}</span>
+                <div className="h-5 bg-line/70 rounded-sm overflow-hidden flex">
+                  {RATINGS.map(([key, label, color]) =>
+                    round[key] ? (
+                      <div
+                        key={key}
+                        className={color}
+                        style={{ width: `${(round[key] / round.total) * 100}%` }}
+                        title={`${label}: ${round[key]}`}
+                      />
+                    ) : null,
+                  )}
+                </div>
+                <span className="font-mono text-xs text-right" title="Hire or strong hire">
+                  {pct(round.hire_rate)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-3">
+          <h4 className="text-xs uppercase tracking-wider text-ink/50 font-medium mb-3">Latest feedback</h4>
+          <ul className="divide-y divide-line">
+            {feedback.recent.map((item) => (
+              <li key={item.id} className="py-2 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium">
+                    {item.candidate}
+                    <span className="text-ink/50 font-normal">
+                      {' '}
+                      · {item.role} · {item.round} · {item.interviewer}
+                    </span>
+                  </p>
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${RATING_STYLE[item.rating]}`}>
+                    {item.rating}
+                  </span>
+                </div>
+                <p className="text-ink/70 mt-0.5 leading-snug">{item.comment}</p>
+                <p className="text-[11px] text-ink/45 mt-0.5">{dateLabel(item.date)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   )
 }
 

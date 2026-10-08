@@ -17,6 +17,7 @@ from app.recommendations import build_actions
 SUGGESTIONS = [
     "How is the pipeline?",
     "Where is the bottleneck?",
+    "How is interview feedback?",
     "What is our monthly revenue?",
     "Who is on the bench?",
     "Which contracts end soon?",
@@ -90,6 +91,19 @@ def _offers(db: Session, as_of: date) -> str:
         s = cohort["summary"]
         lines.append("• {}: {}, {}.".format(
             cohort["name"], _count(s["offers_accepted"], "offers accepted"), _count(s["joined"], "joined")))
+    return "\n".join(lines)
+
+
+def _feedback(db: Session, as_of: date) -> str:
+    data = build_recruitment(db, None, as_of)
+    blocks = [c for c in data["cohorts"] if c.get("feedback", {}).get("overall", {}).get("total")]
+    if not blocks:
+        return "No interview feedback has been recorded yet."
+    lines = ["Interview feedback up to the week ending {} (sample data):".format(data["week_ending"])]
+    for cohort in blocks:
+        o = cohort["feedback"]["overall"]
+        lines.append("• {}: {} strong hire, {} hire, {} no hire, {} strong no hire ({} hire rate).".format(
+            cohort["name"], o["strong_hire"], o["hire"], o["no_hire"], o["strong_no_hire"], _pct(o["hire_rate"])))
     return "\n".join(lines)
 
 
@@ -196,6 +210,7 @@ Handler = Callable[[Session, date], str]
 
 INTENTS: List[Tuple[Handler, Tuple[str, ...]]] = [
     (_greeting, ("hi", "hello", "hey", "help", "what can you do")),
+    (_feedback, ("feedback", "strong hire", "no hire", "verdict", "verdicts", "interviewer", "interviewers", "hire rate")),
     (_bottleneck, ("bottleneck", "slot", "slots", "interview", "l2", "capacity", "stuck")),
     (_offers, ("offer", "offers", "accepted", "joined", "joiners")),
     (_pipeline, ("pipeline", "hiring", "recruit", "recruitment", "candidates", "funnel", "cto", "rejected")),
