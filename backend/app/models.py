@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, DateTime, Float, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 
 from app.database import Base
 
@@ -122,6 +122,53 @@ class InterviewFeedback(Base):
     comment = Column(Text)
     interview_date = Column(Date, nullable=False, index=True)
     is_demo = Column(Integer, nullable=False, default=1)
+
+
+class AcademyCohort(Base):
+    """One academy batch. Academy A is the workbook roster; B and C are illustrative."""
+
+    __tablename__ = "academy_cohorts"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False)
+    start_date = Column(Date, nullable=False)
+    program_weeks = Column(Integer, nullable=False)
+    source = Column(String, nullable=False)  # workbook | demo
+
+
+class TraineeProfile(Base):
+    """A person inside an academy cohort, with the resume fields the readiness score uses."""
+
+    __tablename__ = "trainee_profiles"
+
+    id = Column(Integer, primary_key=True)
+    cohort_id = Column(Integer, ForeignKey("academy_cohorts.id"), nullable=False, index=True)
+    person_id = Column(Integer)
+    name = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+    hire_source = Column(String)
+    years_experience = Column(Float, nullable=False)
+    education = Column(String, nullable=False)
+    skills = Column(Text, nullable=False)
+    certifications = Column(Text)
+    client = Column(String)
+    client_start = Column(Date)
+    is_demo = Column(Integer, nullable=False, default=1)
+
+
+class TraineeWeekScore(Base):
+    """Hands-on and proctored result for one trainee in one academy week."""
+
+    __tablename__ = "trainee_week_scores"
+    __table_args__ = (UniqueConstraint("trainee_id", "week", name="uq_trainee_week"),)
+
+    id = Column(Integer, primary_key=True)
+    trainee_id = Column(Integer, ForeignKey("trainee_profiles.id"), nullable=False, index=True)
+    week = Column(Integer, nullable=False)
+    hands_on = Column(Float, nullable=False)
+    proctored = Column(Float, nullable=False)
+    topic = Column(String)
 
 
 class RecommendationStatus(Base):

@@ -4,10 +4,12 @@ from typing import Optional
 
 from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.matching import MatchRequest, match_bench
 from app import models  # noqa: F401
+from app.academy import build_academy, ensure_academy, resume_file
 from app.analytics import build_cohort, build_deployment, build_executive, build_recruitment
 from app.chatbot import reply as chat_reply
 from app.cost_seed import ensure_cost_rates
@@ -23,6 +25,7 @@ async def lifespan(_app):
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
     ensure_cost_rates()
+    ensure_academy()
     yield
 
 
@@ -122,6 +125,24 @@ def deployment_match(
 @app.get("/api/cohort")
 def cohort(as_of: Optional[str] = None, db: Session = Depends(get_db)):
     return build_cohort(db, _day(as_of))
+
+
+@app.get("/api/academy")
+def academy(cohort: Optional[str] = None, as_of: Optional[str] = None, db: Session = Depends(get_db)):
+    return build_academy(db, _day(as_of), cohort)
+
+
+@app.get("/api/academy/resumes/{trainee_id}")
+def academy_resume(trainee_id: int, db: Session = Depends(get_db)):
+    found = resume_file(db, trainee_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="No resume for that candidate")
+    filename, body = found
+    return Response(
+        content=body,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="{}"'.format(filename)},
+    )
 
 
 @app.get("/api/economics")

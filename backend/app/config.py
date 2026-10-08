@@ -69,6 +69,24 @@ CONFIDENCE = {
     "demo": 40,
 }
 
+# Candidate deployment readiness on the cohort page.
+# Assessment is the recent hands-on and proctored mean. Resume fit is a
+# weighted mix of experience, core-skill coverage, certifications, and education.
+ASSESSMENT_WEIGHT = 0.65
+RESUME_WEIGHT = 0.35
+RESUME_PARTS = {
+    "experience": 0.40,
+    "skills": 0.40,
+    "certifications": 0.10,
+    "education": 0.10,
+}
+BAND_DEPLOY = 85
+BAND_COACHING = 70
+READINESS_RECENT_WEEKS = 3
+SCORE_DECLINE_POINTS = 0.05  # drop across the last two filed weeks that raises a flag
+PROVISIONAL_UNTIL_WEEK = 4
+CORE_SKILLS = ("Python", "SQL", "APIs", "RAG", "Cloud", "System design")
+
 SOURCES = {
     "workbook": "Workbook (HR-Input, Input - Trainers, Master-Input)",
     "inferred": "Calculated from workbook counts",
