@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import models  # noqa: F401
 from app.analytics import build_cohort, build_deployment, build_executive, build_recruitment
+from app.chatbot import reply as chat_reply
 from app.cost_seed import ensure_cost_rates
 from app.database import Base, engine, get_db
 from app.economics import PHASES, Filters, build_economics, save_rates
@@ -121,6 +122,11 @@ def economics_rates(payload: dict = Body(...), db: Session = Depends(get_db)):
 @app.get("/api/actions")
 def actions(filters: Filters = Depends(_filters), db: Session = Depends(get_db)):
     return build_actions(db, filters)
+
+
+@app.post("/api/chat")
+def chat(payload: dict = Body(...), as_of: Optional[str] = None, db: Session = Depends(get_db)):
+    return chat_reply(db, str(payload.get("message") or ""), _day(as_of))
 
 
 @app.post("/api/actions/{rec_id}/status")

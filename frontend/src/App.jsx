@@ -6,6 +6,7 @@ import Deployment from './pages/Deployment.jsx'
 import Cohort from './pages/Cohort.jsx'
 import Economics from './pages/Economics.jsx'
 import Actions from './pages/Actions.jsx'
+import Chatbot from './Chatbot.jsx'
 
 const PAGES = [
   { id: 'executive', label: 'Executive', icon: LayoutDashboard, Page: Executive },
@@ -72,6 +73,7 @@ export default function App() {
           <Page />
         </main>
       </div>
+      <Chatbot />
     </div>
   )
 }

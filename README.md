@@ -5,8 +5,8 @@ A full-stack web application starter with a FastAPI backend, SQLite database (SQ
 ## Environment Overview
 
 - **OS / Architecture:** macOS (Apple Silicon arm64)
-- **Node.js:** v24.21.0 (Managed via `nvm`)
-- **Package Manager:** npm v11.19.0
+- **Node.js:** v24.10.0 (Installed into `backend/venv` via `nodeenv`)
+- **Package Manager:** npm v11.6.1
 - **Python:** Python 3.9 (Virtual environment at `backend/venv`)
 - **Backend:** FastAPI + Uvicorn + SQLAlchemy
 - **Database:** SQLite (embedded via Python standard library)
@@ -41,12 +41,27 @@ The API creates those three tables on startup and fills them from the workbook w
 
 ---
 
-## How to Run (When Ready)
+## Setup (One Time)
+
+Node.js and npm are installed into the Python virtual environment with `nodeenv`, so activating the venv gives you `python`, `node`, and `npm` for this project.
+
+```bash
+# From the project root
+python3 -m venv backend/venv
+source backend/venv/bin/activate
+pip install -r backend/requirements.txt nodeenv
+nodeenv -p --node=24.10.0 --prebuilt
+cd frontend && npm install
+```
+
+## How to Run
+
+Activate the venv in each terminal first: `source backend/venv/bin/activate`
 
 ### 1. Run the Backend Server
 ```bash
 # From the project root
-./backend/venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000
+uvicorn app.main:app --app-dir backend --reload --reload-dir backend/app --port 8000
 ```
 - API Health Check: `http://localhost:8000/api/health`
 - Interactive Swagger API Docs: `http://localhost:8000/docs`
