@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Float, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, Integer, String, Text
 
 from app.database import Base
 
@@ -61,3 +61,59 @@ class Person(Base):
     client_end = Column(Date)
     hourly_rate = Column(Float)
     hours_per_week = Column(Float)
+
+
+class ResourceRate(Base):
+    """How much internal time or external spend one unit of an activity uses.
+
+    The workbook has no resource hours or costs, so these rows are
+    editable assumptions. Volumes always come from the workbook; only the
+    per-unit hours and costs live here.
+    """
+
+    __tablename__ = "resource_rates"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String, nullable=False, unique=True)
+    label = Column(String, nullable=False)
+    phase = Column(String, nullable=False)  # recruitment | training | deployment
+    stage = Column(String, nullable=False)  # applicant | interview | offer | accepted | training | deployment
+    driver = Column(String, nullable=False)  # which volume this activity scales with
+    cost_type = Column(String, nullable=False)  # internal | external
+    resource_role = Column(String)
+    hours_per_unit = Column(Float)
+    hourly_cost_usd = Column(Float)
+    unit_cost_usd = Column(Float)
+    weekly_capacity_units = Column(Float)
+    sort_order = Column(Integer, nullable=False, default=100)
+    is_placeholder = Column(Integer, nullable=False, default=1)
+    notes = Column(Text)
+
+
+class DemandForecast(Base):
+    """Open client demand for FDEs. Not in the workbook; seeded rows are demo."""
+
+    __tablename__ = "demand_forecast"
+
+    id = Column(Integer, primary_key=True)
+    client = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    location = Column(String)
+    fdes_needed = Column(Integer, nullable=False)
+    needed_by = Column(Date, nullable=False)
+    hourly_rate = Column(Float)
+    hours_per_week = Column(Float)
+    status = Column(String, nullable=False, default="open")
+    is_demo = Column(Integer, nullable=False, default=1)
+
+
+class RecommendationStatus(Base):
+    """Leadership decision on a generated recommendation, keyed by its stable id."""
+
+    __tablename__ = "recommendation_status"
+
+    id = Column(Integer, primary_key=True)
+    rec_id = Column(String, nullable=False, unique=True)
+    status = Column(String, nullable=False, default="OPEN")
+    first_seen = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)

@@ -25,6 +25,10 @@ recruitment_pipeline/
 │   │   ├── models.py      # pipeline_weeks, training_weeks, people
 │   │   ├── seed.py        # Loads the workbook into SQLite
 │   │   ├── analytics.py   # Executive, funnel, deployment, cohort metrics
+│   │   ├── config.py      # Thresholds, risk levels, and score weights for Economics / Actions
+│   │   ├── economics.py   # Resource burn, hiring economics, revenue at risk (calculated metrics)
+│   │   ├── recommendations.py  # Deterministic rule engine + scoring for Leadership Actions
+│   │   ├── cost_seed.py   # Seeds resource_rates (assumptions) and demand_forecast (demo)
 │   │   └── database.py    # SQLite engine and session configuration
 │   ├── requirements.txt
 │   └── venv/

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useDashboard(path) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
+  const loadRef = useRef(() => {})
 
   useEffect(() => {
     let cancelled = false
@@ -11,7 +12,10 @@ export function useDashboard(path) {
     async function load() {
       try {
         const response = await fetch(path, { cache: 'no-store' })
-        if (!response.ok) throw new Error(`Request failed (${response.status})`)
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}))
+          throw new Error(body.detail || `Request failed (${response.status})`)
+        }
         const json = await response.json()
         if (!cancelled) {
           setData(json)
@@ -23,6 +27,7 @@ export function useDashboard(path) {
       }
     }
 
+    loadRef.current = load
     load()
     const timer = setInterval(load, 10000)
     return () => {
@@ -31,5 +36,7 @@ export function useDashboard(path) {
     }
   }, [path])
 
-  return { data, error, updatedAt }
+  const reload = useCallback(() => loadRef.current(), [])
+
+  return { data, error, updatedAt, reload }
 }

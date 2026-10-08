@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Briefcase, GraduationCap, LayoutDashboard, Users } from 'lucide-react'
+import { Briefcase, GraduationCap, LayoutDashboard, ListChecks, Users, Wallet } from 'lucide-react'
 import Executive from './pages/Executive.jsx'
 import Recruitment from './pages/Recruitment.jsx'
 import Deployment from './pages/Deployment.jsx'
 import Cohort from './pages/Cohort.jsx'
+import Economics from './pages/Economics.jsx'
+import Actions from './pages/Actions.jsx'
 
 const PAGES = [
   { id: 'executive', label: 'Executive', icon: LayoutDashboard, Page: Executive },
   { id: 'recruitment', label: 'Recruitment', icon: Users, Page: Recruitment },
   { id: 'deployment', label: 'Deployment', icon: Briefcase, Page: Deployment },
   { id: 'cohort', label: 'Cohort health', icon: GraduationCap, Page: Cohort },
+  { id: 'economics', label: 'Economics', icon: Wallet, Page: Economics },
+  { id: 'actions', label: 'Leadership actions', icon: ListChecks, Page: Actions },
 ]
 
 function readHash() {

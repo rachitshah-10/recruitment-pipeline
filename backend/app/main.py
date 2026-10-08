@@ -2,13 +2,16 @@ from contextlib import asynccontextmanager
 from datetime import date
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app import models  # noqa: F401
 from app.analytics import build_cohort, build_deployment, build_executive, build_recruitment
+from app.cost_seed import ensure_cost_rates
 from app.database import Base, engine, get_db
+from app.economics import PHASES, Filters, build_economics, save_rates
+from app.recommendations import build_actions, set_status
 from app.seed import seed_if_empty
 
 
@@ -16,10 +19,11 @@ from app.seed import seed_if_empty
 async def lifespan(_app):
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
+    ensure_cost_rates()
     yield
 
 
-app = FastAPI(title="Momentuum Blue Operations", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Momentuum Blue Operations", version="0.3.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +52,33 @@ def _week(value: Optional[str]) -> Optional[date]:
         raise HTTPException(status_code=400, detail="week must be YYYY-MM-DD")
 
 
+def _filters(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    phase: Optional[str] = None,
+    role: Optional[str] = None,
+    location: Optional[str] = None,
+    cohort: Optional[str] = None,
+    basis: Optional[str] = None,
+) -> Filters:
+    if phase and phase not in PHASES:
+        raise HTTPException(status_code=400, detail="phase must be one of {}".format(", ".join(PHASES)))
+    if basis and basis not in ("inferred", "reported"):
+        raise HTTPException(status_code=400, detail="basis must be inferred or reported")
+    filters = Filters(
+        start=_week(start),
+        end=_day(end),
+        phase=phase or None,
+        role=role or None,
+        location=location or None,
+        cohort=cohort or None,
+        basis=basis or "inferred",
+    )
+    if filters.start and filters.start > filters.end:
+        raise HTTPException(status_code=400, detail="start must be on or before end")
+    return filters
+
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "Recruitment Pipeline Backend is running"}
@@ -71,3 +102,30 @@ def deployment(as_of: Optional[str] = None, db: Session = Depends(get_db)):
 @app.get("/api/cohort")
 def cohort(as_of: Optional[str] = None, db: Session = Depends(get_db)):
     return build_cohort(db, _day(as_of))
+
+
+@app.get("/api/economics")
+def economics(filters: Filters = Depends(_filters), db: Session = Depends(get_db)):
+    return build_economics(db, filters)
+
+
+@app.put("/api/economics/rates")
+def economics_rates(payload: dict = Body(...), db: Session = Depends(get_db)):
+    try:
+        save_rates(db, payload.get("rates") or [])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {"ok": True}
+
+
+@app.get("/api/actions")
+def actions(filters: Filters = Depends(_filters), db: Session = Depends(get_db)):
+    return build_actions(db, filters)
+
+
+@app.post("/api/actions/{rec_id}/status")
+def action_status(rec_id: str, payload: dict = Body(...), db: Session = Depends(get_db)):
+    try:
+        return set_status(db, rec_id, payload.get("status"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
